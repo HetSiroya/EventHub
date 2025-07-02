@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import { auth } from "../middlewares/token-decode";
+import join from "./join";
 import { eventUpload, processEventPoster } from "../helpers/multer";
 import {
   createEvent,
@@ -8,6 +9,7 @@ import {
   updateEvent,
   deleteEvent,
   getMyEvents,
+  getPopularEvents,
 } from "../controllers/eventController";
 
 const router = express.Router();
@@ -40,6 +42,19 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await getMyEvents(req, res);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Move the popular route before the /:id route
+router.get(
+  "/popular",
+  auth,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await getPopularEvents(req, res);
     } catch (error) {
       next(error);
     }
@@ -79,5 +94,7 @@ router.delete(
     }
   }
 );
+
+router.use("/action", auth, join);
 
 export default router;

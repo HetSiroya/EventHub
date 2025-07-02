@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import EventModel, { IEvent } from "../models/eventModel";
+import EventModel from "../models/eventModel";
 import { CustomRequest } from "../middlewares/token-decode";
 import { sendEventNotification } from "../helpers/emailService";
+
 
 export const createEvent = async (req: CustomRequest, res: Response) => {
     try {
@@ -71,10 +72,8 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
                 $unwind: '$organizer'
             }
         ]);
-
         // Send email notifications to all users
         await sendEventNotification(newEvent);
-
         return res.status(201).json({
             status: 201,
             message: "Event created successfully",
@@ -160,23 +159,19 @@ export const updateEvent = async (req: CustomRequest, res: Response) => {
     try {
         const { title, description, date, location, category } = req.body;
         const poster = req.body.poster;
-
         const event = await EventModel.findById(req.params.id);
-
         if (!event) {
             return res.status(404).json({
                 status: 404,
                 message: "Event not found",
             });
         }
-
-        if (event.organizer.toString() !== req.user?._id) {
+        if (event.organizer.toString() !== req.user?.id) {
             return res.status(403).json({
                 status: 403,
                 message: "Unauthorized: You can only update your own events",
             });
         }
-
         const updatedEvent = await EventModel.findByIdAndUpdate(
             req.params.id,
             {
@@ -259,6 +254,87 @@ export const getMyEvents = async (req: CustomRequest, res: Response) => {
             status: 500,
             message: "Internal server error",
             error: error.message,
+        });
+    }
+};
+
+export const getPopularEvents = async (req: Request, res: Response) => {
+    try {
+        const popularEvents = await EventModel.aggregate([
+            {
+                $match: { isActive: true }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'organizer',
+                    foreignField: '_id',
+                    as: 'organizer',
+                    pipeline: [
+                        {
+                            $project: {
+                                name: 1,
+                                email: 1,
+                                profilePicture: 1,
+                                role: 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $unwind: '$organizer'
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'attendees',
+                    foreignField: '_id',
+                    as: 'attendeeDetails'
+                }
+            },
+            {
+                $project: {
+                    title: 1,
+                    description: 1,
+                    date: 1,
+                    location: 1,
+                    category: 1,
+                    poster: 1,
+                    organizer: 1,
+                    attendeeCount: { $size: { $ifNull: ["$attendees", []] } },
+                    attendees: {
+                        $map: {
+                            input: "$attendeeDetails",
+                            as: "attendee",
+                            in: {
+                                _id: "$$attendee._id",
+                                name: "$$attendee.name",
+                                email: "$$attendee.email"
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $sort: { attendeeCount: -1 }
+            },
+            {
+                $limit: 10
+            }
+        ]);
+
+        return res.status(200).json({
+            status: 200,
+            message: "Popular events retrieved successfully",
+            data: popularEvents
+        });
+    } catch (error: any) {
+        console.error("Popular events error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+            error: error.message
         });
     }
 };

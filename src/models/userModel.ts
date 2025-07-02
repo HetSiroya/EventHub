@@ -14,8 +14,7 @@ export interface User {
   };
 }
 
-const User = new mongoose.Schema<User>(
-  {
+const User = new mongoose.Schema<User>({
     name: {
       type: String,
       required: true,
@@ -55,7 +54,7 @@ const User = new mongoose.Schema<User>(
         default: null,
       }
     },
-  },
+},
   {
     timestamps: true,
   }

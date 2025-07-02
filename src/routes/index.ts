@@ -8,7 +8,10 @@ router.get("/", (req, res) => {
 });
 
 router.use("/auth", auth);
+// router.use("/send-mail", mailsend);
+// ... other imports ...
 
+// ... other middleware ...
 router.use("/events", eventRoutes);
 
 export default router;

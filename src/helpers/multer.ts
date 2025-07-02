@@ -7,10 +7,10 @@ import { Request, Response, NextFunction } from "express";
 // Create upload directories if they don't exist
 const createUploadDirs = () => {
   const dirs = [
-    path.join(__dirname, "../../uploads/profile/original"),
-    path.join(__dirname, "../../uploads/profile/optimized"),
-    path.join(__dirname, "../../uploads/events/original"),
-    path.join(__dirname, "../../uploads/events/optimized")
+    path.join(__dirname, "../../public/uploads/profile/original"),
+    path.join(__dirname, "../../public/uploads/profile/optimized"),
+    path.join(__dirname, "../../public/uploads/events/original"),
+    path.join(__dirname, "../../public/uploads/events/optimized")
   ];
   
   dirs.forEach(dir => {
@@ -35,7 +35,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
 // Profile Image Storage
 const profileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../../uploads/profile/original"));
+    cb(null, path.join(__dirname, "../../public/uploads/profile/original"));
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -46,7 +46,7 @@ const profileStorage = multer.diskStorage({
 // Event Poster Storage
 const eventStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(__dirname, "../../uploads/events/original");
+    const dir = path.join(__dirname, "../../public/uploads/events/original");
     cb(null, dir);
   },
   filename: (req, file, cb) => {
@@ -75,7 +75,7 @@ export const processProfileImage = async (req: Request, res: Response, next: Nex
     const optimizedFilename = `optimized-${req.file.filename}`;
     const optimizedPath = path.join(
       __dirname,
-      "../../uploads/profile/optimized",
+      "../../public/uploads/profile/optimized",
       optimizedFilename
     );
 
@@ -105,7 +105,7 @@ export const processEventPoster = async (req: Request, res: Response, next: Next
     const optimizedFilename = `optimized-${req.file.filename}`;
     const optimizedPath = path.join(
       __dirname,
-      "../../uploads/events/optimized",
+      "../../public/uploads/events/optimized",
       optimizedFilename
     );
 

@@ -19,7 +19,6 @@ export const signUp = async (req: Request, res: Response) => {
         message: "Password and confirm password does not match",
       });
     }
-
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
